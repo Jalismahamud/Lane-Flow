@@ -1,0 +1,8 @@
+FTP Username: app@claudeborges.softvencefsd.xyz
+FTP server: ftp.softvencefsd.xyz
+FTP password: D46FtgBWC2&zn3XB
+
+
+Database user name  : softvence_claudeborges
+Database server name: softvence_claudeborges
+Database password   : LV,3Q3@#J900UAE7
