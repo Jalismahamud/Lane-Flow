@@ -43,5 +43,5 @@ Route::group(['middleware' => ['auth:api']], function () {
     Route::delete('/delete-profile', [UserProfileController::class, 'deleteProfile']);
     Route::post('/logout', [AuthenticationController::class, 'logout']);
 
-
+//
 });
