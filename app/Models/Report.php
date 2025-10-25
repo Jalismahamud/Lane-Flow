@@ -1,10 +1,12 @@
 <?php
-// app/Models/Report.php
+
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\ReportInfo;
+use App\Models\ReportStatusChange;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Report extends Model
 {
@@ -26,7 +28,7 @@ class Report extends Model
         'updated_at',
     ];
 
-    // Constants
+
     public const TYPE_BLOCKED_LANE = 'blocked_lane';
     public const TYPE_EMERGENCY_CLEAR = 'emergency_lane_clearance';
     public const TYPE_TEMP_SHIFT = 'temporary_lane_shift';
@@ -35,7 +37,6 @@ class Report extends Model
     public const STATUS_CLEARED = 'cleared';
     public const STATUS_REMOVED = 'removed';
 
-    // Relationships
     public function user()
     {
         return $this->belongsTo(User::class);
@@ -51,7 +52,7 @@ class Report extends Model
         return $this->hasMany(ReportStatusChange::class);
     }
 
-    // Scopes
+ 
     public function scopeWithinMiles($query, float $lat, float $lng, int $miles = 5)
     {
         $haversine = "(3959 * acos(

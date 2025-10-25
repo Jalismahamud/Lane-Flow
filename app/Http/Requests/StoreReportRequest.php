@@ -23,7 +23,7 @@ class StoreReportRequest extends FormRequest
                 Report::TYPE_EMERGENCY_CLEAR,
                 Report::TYPE_TEMP_SHIFT
             ])],
-            'lane' => ['required', 'string', 'max:50'],
+            'lane' => ['nullable', 'string', 'max:50'],
             'description' => ['nullable', 'string', 'max:1000'],
             'duration_minutes' => ['nullable', 'integer', 'min:1', 'max:1440'],
             'audio' => [

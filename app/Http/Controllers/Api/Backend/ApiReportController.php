@@ -2,19 +2,24 @@
 
 namespace App\Http\Controllers\Api\Backend;
 
+
 use App\Models\Report;
 use App\Traits\ApiResponse;
+
 use Illuminate\Http\Request;
 use App\Services\ReportService;
 use Illuminate\Validation\Rule;
-use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+
 use App\Http\Requests\StoreReportRequest;
+
+
 use App\Http\Requests\ToggleClearRequest;
 use App\Http\Requests\UpdateReportRequest;
 use App\Http\Requests\AdminUpdateReportRequest;
+
 
 class ApiReportController extends Controller
 {
@@ -74,8 +79,9 @@ class ApiReportController extends Controller
                 ->get();
         });
 
-        return $this->success($reports, 'Reports retrieved successfully',200);
+        return $this->success($reports, 'Reports retrieved successfully', 200);
     }
+
 
     public function store(StoreReportRequest $request)
     {
@@ -85,10 +91,9 @@ class ApiReportController extends Controller
             ->first();
 
         if ($lastReport && $lastReport->created_at->diffInSeconds(now()) < 5) {
-            return $this->error('You can only create one report per minute', 429);
+            return $this->error([], 'You can only create one report per minute', 429);
         }
 
-        // Check duplicate location
         $isDuplicate = $this->reportService->checkDuplicateReport(
             $user->id,
             $request->latitude,
@@ -96,7 +101,7 @@ class ApiReportController extends Controller
         );
 
         if ($isDuplicate) {
-            return $this->error('You have already reported at this location (within 1 hour)', 429);
+            return $this->error([], 'You have already reported at this location (within 1 hour)', 429);
         }
 
         try {
@@ -106,14 +111,23 @@ class ApiReportController extends Controller
                 $request->file('audio')
             );
 
-            // Clear cache
             $this->clearReportCache($report->latitude, $report->longitude);
 
-            return $this->success($report, 'Report created successfully', 201);
+            $data = [
+                'latitude' => $report->latitude,
+                'longitude' => $report->longitude,
+                'status' => $report->status,
+                'description' => $report->description,
+                'file' => isset($report->infos[0])? url($report->infos[0]->path) : null,
+            ];
+
+
+            return $this->success($data, 'Report created successfully', 201);
         } catch (\Exception $e) {
-            return $this->error('Failed to create report. Please try again', 500);
+            return $this->error([],$e->getMessage(), 500);
         }
     }
+
 
     public function show(Report $report)
     {
@@ -175,7 +189,7 @@ class ApiReportController extends Controller
         $report = Report::find($reportId);
 
         if (!$report) {
-            return $this->error([],'Report not found', 404);
+            return $this->error([], 'Report not found', 404);
         }
         try {
             $updatedReport = $this->reportService->toggleClearStatus(
@@ -191,9 +205,9 @@ class ApiReportController extends Controller
                 ? 'Report marked as cleared'
                 : 'Report marked as blocked';
 
-            return $this->success($updatedReport, $message);
+            return $this->success($updatedReport, $message,200);
         } catch (\Exception $e) {
-            return $this->error('Failed to update status', 500);
+            return $this->error([],$e->getMessage(), 500);
         }
     }
 

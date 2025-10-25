@@ -215,15 +215,60 @@ class ReportService
         };
     }
 
+    // protected function saveAudio(Report $report, $file): void
+    // {
+    //     $path = $file->store('reports/audio', 'local');
+
+    //     $duration = null;
+    //     if (class_exists('\getID3')) {
+    //         try {
+    //             $getID3 = new \getID3();
+    //             $fileInfo = $getID3->analyze(storage_path('app/' . $path));
+    //             $duration = $fileInfo['playtime_seconds'] ?? null;
+    //         } catch (\Exception $e) {
+    //             Log::warning('Could not extract audio duration', [
+    //                 'report_id' => $report->id,
+    //                 'error' => $e->getMessage()
+    //             ]);
+    //         }
+    //     }
+
+    //     ReportInfo::create([
+    //         'report_id' => $report->id,
+    //         'path' => $path,
+    //         'mime' => $file->getMimeType(),
+    //         'duration_seconds' => $duration,
+    //         'file_size' => $file->getSize()
+    //     ]);
+    // }
+
     protected function saveAudio(Report $report, $file): void
     {
-        $path = $file->store('reports/audio', 'local');
+        if (!$file || !$file->isValid()) {
+            throw new \Exception('Invalid or missing audio file.');
+        }
+
+        $mimeType = $file->getMimeType();
+        $fileSize = $file->getSize();
+        $originalExtension = $file->getClientOriginalExtension();
+
+
+        $destinationPath = public_path('uploads/audio');
+        if (!file_exists($destinationPath)) {
+            mkdir($destinationPath, 0777, true);
+        }
+
+        $fileName = uniqid() . '_' . time() . '.' . $originalExtension;
+        $relativePath = 'uploads/audio/' . $fileName;
+
+        $file->move($destinationPath, $fileName);
+
 
         $duration = null;
         if (class_exists('\getID3')) {
             try {
                 $getID3 = new \getID3();
-                $fileInfo = $getID3->analyze(storage_path('app/' . $path));
+                $fileInfo = $getID3->analyze(public_path($relativePath));
                 $duration = $fileInfo['playtime_seconds'] ?? null;
             } catch (\Exception $e) {
                 Log::warning('Could not extract audio duration', [
@@ -233,14 +278,18 @@ class ReportService
             }
         }
 
+
         ReportInfo::create([
             'report_id' => $report->id,
-            'path' => $path,
-            'mime' => $file->getMimeType(),
+            'path' => $relativePath,
+            'mime' => $mimeType,
             'duration_seconds' => $duration,
-            'file_size' => $file->getSize()
+            'file_size' => $fileSize
         ]);
     }
+
+
+
 
     protected function logStatusChange(
         Report $report,
