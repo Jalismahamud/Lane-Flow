@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\ContactUsController;
 use App\Http\Controllers\Api\Auth\SocialAuthController;
 use App\Http\Controllers\Api\Auth\UserProfileController;
+use App\Http\Controllers\Api\Backend\ApiReportController;
 use App\Http\Controllers\Api\Auth\ResetPasswordController;
 use App\Http\Controllers\Api\Auth\AuthenticationController;
 use App\Http\Controllers\Web\Backend\Settings\DynamicPageController;
@@ -42,6 +43,23 @@ Route::group(['middleware' => ['auth:api']], function () {
 
     Route::delete('/delete-profile', [UserProfileController::class, 'deleteProfile']);
     Route::post('/logout', [AuthenticationController::class, 'logout']);
+
+
+   Route::get('reports', [ApiReportController::class, 'index']);
+    Route::post('report/store', [ApiReportController::class, 'store']);
+    Route::get('my/reports', [ApiReportController::class, 'myReports']);
+    Route::get('report/{report}', [ApiReportController::class, 'show']);
+    Route::put('report/{report}', [ApiReportController::class, 'update']);
+    Route::delete('report/delete/{report}', [ApiReportController::class, 'destroy']);
+    Route::post('report/{report}/toggle-clear', [ApiReportController::class, 'toggleClear']);
+
+
+    Route::get('report/{report}/audio/{info}', [ApiReportController::class, 'streamAudio'])
+        ->name('report.audio.stream');
+
+    Route::middleware(['admin'])->group(function () {
+        Route::post('report/{report}/admin-update', [ApiReportController::class, 'adminUpdate']);
+    });
 
 //
 });

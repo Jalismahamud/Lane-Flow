@@ -77,7 +77,7 @@ class SocialAuthController extends Controller
                 'id' => $user->id,
                 'email' => $user->email,
                 'role' => $user->role,
-                'chique_auth_token' => $token,
+                'token' => $token,
                 'expires_in_minutes' => $expiresInMinutes,
                 'expires_at' => $expiresAt,
                 'is_style_profile' => $user->getIsStyleProfileAttribute(),

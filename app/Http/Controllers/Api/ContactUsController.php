@@ -30,7 +30,6 @@ class ContactUsController extends Controller
                 return $this->error($validator->errors(), 'Validation failed.', 422);
             }
 
-            // Upsert logic (by email or phone)
             $contact = ContactUs::create(
                 [
                     'email' => $request->email,

@@ -79,4 +79,21 @@ class User extends Authenticatable implements JWTSubject
         return $value;
     }
 
+    public function reports()
+    {
+        return $this->hasMany(Report::class);
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin' || $this->is_admin === true;
+        // Adjust based on your admin logic
+    }
+
+    public function canViewReport(Report $report): bool
+    {
+        return true; // All authenticated users can view
+        // Or implement custom logic
+    }
+
 }

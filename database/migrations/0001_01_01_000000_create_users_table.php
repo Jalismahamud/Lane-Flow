@@ -31,6 +31,12 @@ return new class extends Migration
 
             $table->enum('role', ['user', 'admin'])->default('user');
 
+            $table->boolean('is_google_signin')->default(false);
+            $table->string('google_id')->nullable();
+
+            $table->boolean('is_apple_signin')->default(false);
+            $table->string('apple_id')->nullable();
+
            $table->timestamps();
         });
 

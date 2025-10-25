@@ -22,7 +22,24 @@ trait ApiResponse
             'status' => false ,
             'message' => $message ,
             'data' => $data ,
-            'code' => $code 
+            'code' => $code
         ],$code);
+    }
+
+     protected function paginated($data, string $message = null)
+    {
+        return response()->json([
+            'success' => true,
+            'message' => $message,
+            'data' => $data->items(),
+            'pagination' => [
+                'total' => $data->total(),
+                'per_page' => $data->perPage(),
+                'current_page' => $data->currentPage(),
+                'last_page' => $data->lastPage(),
+                'from' => $data->firstItem(),
+                'to' => $data->lastItem(),
+            ]
+        ]);
     }
 }
