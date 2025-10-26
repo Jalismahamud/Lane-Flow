@@ -9,7 +9,6 @@ class Report extends Model
     protected $fillable = [
         'user_id',
         'text',
-        'audio',
         'status',
         'lane',
         'latitude',

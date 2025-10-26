@@ -136,9 +136,21 @@ class ReportStatisticsController extends Controller
             // Calculate zone statistics based on geographical clustering
             $zoneData = $this->calculateZoneStatistics($mapReports);
 
-            // Get unique statuses and lanes for filters
-            $statuses = Report::distinct()->pluck('status')->filter();
-            $lanes = Report::distinct()->pluck('lane')->filter();
+            // Get unique statuses and lanes for filters (only from existing data)
+            $statuses = Report::distinct()
+                ->whereNotNull('status')
+                ->pluck('status')
+                ->filter()
+                ->sort()
+                ->values();
+                
+            $lanes = Report::distinct()
+                ->whereNotNull('lane')
+                ->where('lane', '!=', '')
+                ->pluck('lane')
+                ->filter()
+                ->sort()
+                ->values();
 
             // Statistics
             $totalThisMonth = Report::whereMonth('created_at', Carbon::now()->month)

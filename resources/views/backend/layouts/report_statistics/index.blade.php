@@ -125,42 +125,49 @@
                 <div class="row mt-4">
                     <div class="col-lg-12">
                         <div class="card shadow-lg border-0">
-                            <div class="card-header bg-gradient-success text-white">
-                                <h3 class="card-title mb-2">📋 Recent Reports</h3>
-                                
+                            <div class="card-header bg-gradient-success text-white flex-column flex-md-row d-flex justify-content-between align-items-center">
+                                <h3 class="card-title">📋 Recent Reports</h3>
+                             
                                 <!-- Search & Filters Form -->
-                                <form method="GET" class="row g-2 mt-2">
+                                <form method="GET" class="row g-3" id="searchForm">
                                     <input type="hidden" name="filter_type" value="{{ $filterType }}">
                                     <input type="hidden" name="month" value="{{ $selectedMonth }}">
                                     <input type="hidden" name="year" value="{{ $selectedYear }}">
                                     <input type="hidden" name="week" value="{{ $selectedWeek }}">
                                     
                                     <div class="col-md-4">
-                                        <input type="text" name="search" class="form-control form-control-sm" placeholder="🔍 Search by text, user, status..." value="{{ $search }}">
+                                        <div class="input-group">
+                                            {{-- <span class="input-group-text bg-white">
+                                                <i class="fas fa-search"></i>
+                                            </span> --}}
+                                            <input type="text" name="search" style="height: 35px" class="form-control" placeholder="Search by text, user, status..." value="{{ $search }}" onkeyup="handleSearchInput()">
+                                        </div>
                                     </div>
-                                    <div class="col-md-3">
-                                        <select name="status" class="form-select form-select-sm">
+                                    <div class="col-md-4">
+                                        <select name="status" style="height: 35px" class="form-select" onchange="this.form.submit()">
                                             <option value="">All Statuses</option>
                                             @foreach($statuses as $s)
-                                                <option value="{{ $s }}" {{ $selectedStatus == $s ? 'selected' : '' }}>{{ ucfirst($s) }}</option>
+                                                <option value="{{ $s }}" style="font-size: 14px" {{ $selectedStatus == $s ? 'selected' : '' }}>{{ ucfirst($s) }}</option>
                                             @endforeach
                                         </select>
                                     </div>
-                                    <div class="col-md-3">
-                                        <select name="lane" class="form-select form-select-sm">
+                                    <div class="col-md-4">
+                                        <select name="lane" class="form-select" style="height: 35px" onchange="this.form.submit()">
                                             <option value="">All Lanes</option>
                                             @foreach($lanes as $l)
-                                                <option value="{{ $l }}" {{ $selectedLane == $l ? 'selected' : '' }}>{{ ucfirst($l) }}</option>
+                                                <option value="{{ $l }}" style="font-size: 14px" {{ $selectedLane == $l ? 'selected' : '' }}>{{ ucfirst($l) }}</option>
                                             @endforeach
                                         </select>
                                     </div>
-                                    <div class="col-md-2">
-                                        <button class="btn btn-sm btn-light w-100" type="submit">
-                                            <i class="fas fa-search"></i> Search
-                                        </button>
-                                    </div>
+
+                                   
                                 </form>
+
+                                  
                             </div>
+
+
+
                             <div class="card-body">
                                 <div class="table-responsive">
                                     <table class="table table-hover table-striped">

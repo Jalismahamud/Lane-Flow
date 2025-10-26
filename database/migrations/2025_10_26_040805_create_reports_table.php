@@ -15,9 +15,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->text('text')->nullable();
-            $table->string('audio')->nullable();
-            $table->enum('status', ['blocked', 'clear', 'accident', 'other'])->default('clear');
-            $table->enum('lane', ['left', 'middle', 'right', 'none'])->default('none');
+            $table->enum('status', ['blocked', 'clear', 'accident', 'other'])->default('blocked');
+            // $table->enum('lane', ['left', 'middle', 'right', 'none'])->default('none');
             $table->decimal('latitude', 10, 6)->nullable();
             $table->decimal('longitude', 10, 6)->nullable();
             $table->dateTime('reported_at')->nullable();

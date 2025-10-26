@@ -56,9 +56,8 @@ class ApiReportController extends Controller
                 return [
                     'id' => $report->id,
                     'text' => $report->text,
-                    'audio' => $report->audio ? url($report->audio) : null,
                     'status' => $report->status,
-                    'lane' => $report->lane,
+                    // 'lane' => $report->lane,
                     'latitude' => $report->latitude,
                     'longitude' => $report->longitude,
                     'reported_at' => Carbon::parse($report->reported_at)->format('Y-m-d H:i:s'),
@@ -78,12 +77,8 @@ class ApiReportController extends Controller
         try {
             $validator = Validator::make($request->all(), [
                 'text'              => ['nullable', 'string'],
-                'audio'             => ['nullable', 'file', 'mimes:mp3,wav,m4a', 'max:10240'],
-                'status'            => ['required', 'string', 'in:blocked,clear,accident,other'],
-                'lane'              => ['nullable', 'string', 'in:left,middle,right,none'],
                 'latitude'          => ['required', 'numeric', 'between:-90,90'],
                 'longitude'         => ['required', 'numeric', 'between:-180,180'],
-                'reported_at'       => ['nullable', 'date'],
             ]);
 
             if ($validator->fails()) {
@@ -93,15 +88,10 @@ class ApiReportController extends Controller
             $data = $validator->validated();
             $user = auth('api')->user();
 
-            if ($request->hasFile('audio')) {
-                $audioPath = Helper::uploadImage($request->file('audio'), 'reports/audio');
-                $data['audio'] = $audioPath;
-            }
-
             $data['user_id'] = $user->id;
-            $report = Report::create($data);
+            $data['reported_at'] = now();
 
-            $report['audio'] = url($report->audio);
+            $report = Report::create($data);
 
             return $this->success($report, 'Report created successfully.', 201);
         } catch (Exception $e) {
@@ -116,12 +106,8 @@ class ApiReportController extends Controller
         try {
             $validator = Validator::make($request->all(), [
                 'text' => ['nullable', 'string'],
-                'audio' => ['nullable', 'file', 'mimes:mp3,wav,m4a', 'max:10240'],
-                'status' => ['nullable', 'string', 'in:blocked,clear,accident,other'],
-                'lane' => ['nullable', 'string', 'in:left,middle,right,none'],
                 'latitude' => ['nullable', 'numeric', 'between:-90,90'],
                 'longitude' => ['nullable', 'numeric', 'between:-180,180'],
-                'reported_at' => ['nullable', 'date'],
             ]);
 
             if ($validator->fails()) {
@@ -138,14 +124,6 @@ class ApiReportController extends Controller
             }
 
             $data = $validator->validated();
-
-            if ($request->hasFile('audio')) {
-                if ($report->audio) {
-                    Helper::deleteImage($report->audio);
-                }
-                $audioPath = Helper::uploadImage($request->file('audio'), 'reports/audio');
-                $data['audio'] = $audioPath;
-            }
 
             $report['reported_at'] = now();
 
@@ -171,10 +149,6 @@ class ApiReportController extends Controller
 
             if (!$report) {
                 return $this->error([], 'Report not found.', 404);
-            }
-
-            if ($report->audio) {
-                Helper::deleteImage($report->audio);
             }
 
             $report->delete();
