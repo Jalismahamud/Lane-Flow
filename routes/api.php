@@ -44,22 +44,10 @@ Route::group(['middleware' => ['auth:api']], function () {
     Route::delete('/delete-profile', [UserProfileController::class, 'deleteProfile']);
     Route::post('/logout', [AuthenticationController::class, 'logout']);
 
+    Route::get('/reports', [ApiReportController::class, 'index']);
+    Route::post('report/change-status/{id}', [ApiReportController::class, 'changeToggleReportStatus']);
+    Route::post('/report/store', [ApiReportController::class, 'store']);
+    Route::post('/report/update/{id}', [ApiReportController::class, 'update']);
+    Route::delete('/report/delete/{id}', [ApiReportController::class, 'destroy']);
 
-   Route::get('reports', [ApiReportController::class, 'index']);
-    Route::post('report/store', [ApiReportController::class, 'store']);
-    Route::get('my/reports', [ApiReportController::class, 'myReports']);
-    Route::get('report/{report}', [ApiReportController::class, 'show']);
-    Route::put('report/{report}', [ApiReportController::class, 'update']);
-    Route::delete('report/delete/{report}', [ApiReportController::class, 'destroy']);
-    Route::post('report/{report}/toggle-clear', [ApiReportController::class, 'toggleClear']);
-
-
-    Route::get('report/{report}/audio/{info}', [ApiReportController::class, 'streamAudio'])
-        ->name('report.audio.stream');
-
-    Route::middleware(['admin'])->group(function () {
-        Route::post('report/{report}/admin-update', [ApiReportController::class, 'adminUpdate']);
-    });
-
-//
 });

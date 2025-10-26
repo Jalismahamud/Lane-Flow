@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Auth;
 
 use Exception;
 use App\Helper\Helper;
+use App\Models\Report;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -160,5 +161,6 @@ class UserProfileController extends Controller
             return $this->error([], $e->getMessage(), 500);
         }
     }
-}
 
+    
+}

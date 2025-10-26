@@ -47,6 +47,14 @@
                     </a>
                 </li>
 
+                <li class="slide">
+                    <a class="side-menu__item {{ request()->routeIs('user') ? 'has-link' : '' }}"
+                        href="{{ route('admin.report.statistics.index') }}">
+                        <span><i class="side-menu__icon fa fa-users"></i></span>
+                        <span class="side-menu__label">User List</span>
+                    </a>
+                </li>
+
 
 
                 <h3>Components</h3>

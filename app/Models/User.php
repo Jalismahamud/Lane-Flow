@@ -48,6 +48,11 @@ class User extends Authenticatable implements JWTSubject
         'longitude',
     ];
 
+    public function reports()
+    {
+        return $this->hasMany(Report::class);
+    }
+
 
     protected $hidden = [
         'password',
@@ -79,10 +84,7 @@ class User extends Authenticatable implements JWTSubject
         return $value;
     }
 
-    public function reports()
-    {
-        return $this->hasMany(Report::class);
-    }
+   
 
     public function isAdmin(): bool
     {

@@ -1,14 +1,13 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Web\Backend\ReviewController;
 use App\Http\Controllers\Web\Backend\CategoryController;
 use App\Http\Controllers\Web\Backend\UserListController;
 use App\Http\Controllers\Web\Backend\DashboardController;
-use App\Http\Controllers\Web\Backend\WebSiteNameController;
 use App\Http\Controllers\Web\Backend\CMS\AuthPageController;
 use App\Http\Controllers\Web\Backend\Settings\ProfileController;
 use App\Http\Controllers\Web\Backend\Settings\SettingController;
+use App\Http\Controllers\Web\Backend\ReportStatisticsController;
 use App\Http\Controllers\Web\Backend\Settings\SocialLinkController;
 use App\Http\Controllers\Web\Backend\Settings\DynamicPageController;
 use App\Http\Controllers\Web\Backend\Settings\MailSettingController;
@@ -21,7 +20,7 @@ Route::middleware(['auth:web', 'admin'])->group(function () {
 Route::get('/user-list', [UserListController::class, 'index'])->name('admin.user.index');
 Route::delete('/user-list/delete/{id}', [UserListController::class, 'destroy'])->name('admin.user.destroy');
 
-
+Route::get('/report-statistics', [ReportStatisticsController::class, 'index'])->name('admin.report.statistics.index');
 
 Route::prefix('setting/social-link')->middleware(['auth:web', 'admin'])->group(function () {
     Route::get('/', [SocialLinkController::class, 'index'])->name('social.link.index');

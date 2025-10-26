@@ -2,275 +2,216 @@
 
 namespace App\Http\Controllers\Api\Backend;
 
-
+use Exception;
 use App\Models\Report;
+use App\Helper\Helper;
 use App\Traits\ApiResponse;
-
 use Illuminate\Http\Request;
-use App\Services\ReportService;
-use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Cache;
-
-use App\Http\Requests\StoreReportRequest;
-
-
-use App\Http\Requests\ToggleClearRequest;
-use App\Http\Requests\UpdateReportRequest;
-use App\Http\Requests\AdminUpdateReportRequest;
-
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Validator;
 
 class ApiReportController extends Controller
 {
     use ApiResponse;
 
-    protected $reportService;
-
-    public function __construct(ReportService $reportService)
-    {
-        $this->reportService = $reportService;
-    }
-
     public function index(Request $request)
     {
-        $validated = $request->validate([
-            'lat' => ['required', 'numeric', 'between:-90,90'],
-            'lng' => ['required', 'numeric', 'between:-180,180'],
-            'radius' => ['nullable', 'integer', 'min:1', 'max:50'],
-            'include_cleared' => ['nullable', 'boolean'],
-            'type' => ['nullable', Rule::in([
-                Report::TYPE_BLOCKED_LANE,
-                Report::TYPE_EMERGENCY_CLEAR,
-                Report::TYPE_TEMP_SHIFT
-            ])],
-            'status' => ['nullable', Rule::in([
-                Report::STATUS_BLOCKED,
-                Report::STATUS_CLEARED
-            ])],
-        ]);
-
-        $lat = (float) $validated['lat'];
-        $lng = (float) $validated['lng'];
-        $radius = (int) ($validated['radius'] ?? 5);
-        $includeCleared = (bool) ($validated['include_cleared'] ?? false);
-
-        $cacheKey = "reports:{$lat}:{$lng}:{$radius}:{$includeCleared}:" .
-            ($validated['type'] ?? 'all') . ':' .
-            ($validated['status'] ?? 'all');
-
-        $reports = Cache::remember($cacheKey, 10, function () use ($validated, $lat, $lng, $radius, $includeCleared) {
-            $query = Report::query();
-
-            if (!$includeCleared) {
-                $query->active();
-            }
-
-            if (!empty($validated['type'])) {
-                $query->byType($validated['type']);
-            }
-
-            if (!empty($validated['status'])) {
-                $query->byStatus($validated['status']);
-            }
-
-            return $query->withinMiles($lat, $lng, $radius)
-                ->with(['infos', 'user:id,name,avatar'])
-                ->get();
-        });
-
-        return $this->success($reports, 'Reports retrieved successfully', 200);
-    }
-
-
-    public function store(StoreReportRequest $request)
-    {
-        $user = $request->user();
-        $lastReport = Report::where('user_id', $user->id)
-            ->latest('created_at')
-            ->first();
-
-        if ($lastReport && $lastReport->created_at->diffInSeconds(now()) < 5) {
-            return $this->error([], 'You can only create one report per minute', 429);
-        }
-
-        $isDuplicate = $this->reportService->checkDuplicateReport(
-            $user->id,
-            $request->latitude,
-            $request->longitude
-        );
-
-        if ($isDuplicate) {
-            return $this->error([], 'You have already reported at this location (within 1 hour)', 429);
-        }
-
         try {
-            $report = $this->reportService->createReport(
-                $request->validated(),
-                $user,
-                $request->file('audio')
-            );
+            $validator = Validator::make($request->all(), [
+                'latitude' => ['nullable', 'numeric', 'between:-90,90'],
+                'longitude' => ['nullable', 'numeric', 'between:-180,180'],
+                'distance' => ['nullable', 'numeric', 'min:0', 'max:100']
+            ]);
 
-            $this->clearReportCache($report->latitude, $report->longitude);
-
-            $data = [
-                'latitude' => $report->latitude,
-                'longitude' => $report->longitude,
-                'status' => $report->status,
-                'description' => $report->description,
-                'file' => isset($report->infos[0])? url($report->infos[0]->path) : null,
-            ];
-
-
-            return $this->success($data, 'Report created successfully', 201);
-        } catch (\Exception $e) {
-            return $this->error([],$e->getMessage(), 500);
-        }
-    }
-
-
-    public function show(Report $report)
-    {
-        $report->load(['infos', 'statusChanges.user:id,name', 'user:id,name']);
-        return $this->success($report, 'Report details retrieved successfully');
-    }
-
-    public function update(UpdateReportRequest $request, Report $report)
-    {
-        try {
-            $updatedReport = $this->reportService->updateReport(
-                $report,
-                $request->validated(),
-                $request->user()
-            );
-
-            return $this->success($updatedReport, 'Report updated successfully');
-        } catch (\Exception $e) {
-            return $this->error($e->getMessage() === 'Unauthorized'
-                ? 'You are not authorized to update this report'
-                : 'Failed to update report', 403);
-        }
-    }
-
-    public function destroy($reportId)
-    {
-        try {
-            $report = Report::where('user_id', Auth::id())->find($reportId);
-            if (!$report) {
-                return $this->error([], 'Report not found', 404);
-            } else if ($report->user_id !== Auth::id()) {
-                return $this->error([], 'You are not authorized to delete this report', 403);
+            if ($validator->fails()) {
+                return $this->error([], $validator->errors()->first(), 422);
             }
 
-            try {
-                if ($report->infos) {
-                    foreach ($report->infos as $info) {
-                        $filePath = storage_path('app/' . $info->path);
-                        if (file_exists($filePath)) {
-                            unlink($filePath);
-                        }
-                    }
-                }
-                $report->delete();
-            } catch (\Exception $e) {
-                return $this->error([], 'Failed to delete report', 500);
+            $user = auth('api')->user();
+            $query = Report::with('user:id,name,avatar');
+
+            if ($request->filled(['latitude', 'longitude'])) {
+                $latitude = $request->latitude;
+                $longitude = $request->longitude;
+                $distance = $request->distance ?? 5;
+
+                $query->selectRaw("
+                    *,
+                    (
+                        6371 * acos(
+                            cos(radians(?)) * cos(radians(latitude)) *
+                            cos(radians(longitude) - radians(?)) +
+                            sin(radians(?)) * sin(radians(latitude))
+                        )
+                    ) AS distance", [$latitude, $longitude, $latitude])
+                    ->having('distance', '<=', $distance)
+                    ->orderBy('distance');
             }
 
-            $this->clearReportCache($report->latitude, $report->longitude);
-            return $this->success(null, 'Report deleted successfully');
-        } catch (\Exception $e) {
+            $reports = $query->orderBy('created_at', 'desc')->get();
+
+            $reports = $reports->map(function ($report) {
+                return [
+                    'id' => $report->id,
+                    'text' => $report->text,
+                    'audio' => $report->audio ? url($report->audio) : null,
+                    'status' => $report->status,
+                    'lane' => $report->lane,
+                    'latitude' => $report->latitude,
+                    'longitude' => $report->longitude,
+                    'reported_at' => Carbon::parse($report->reported_at)->format('Y-m-d H:i:s'),
+                    'user' => $report->user,
+                ];
+            });
+
+            return $this->success($reports, 'Reports retrieved successfully', 200);
+        } catch (Exception $e) {
+            Log::error('Reports Retrieval Error: ' . $e->getMessage());
             return $this->error([], $e->getMessage(), 500);
         }
     }
 
-    public function toggleClear(ToggleClearRequest $request, $reportId)
-    {
-
-        $report = Report::find($reportId);
-
-        if (!$report) {
-            return $this->error([], 'Report not found', 404);
-        }
-        try {
-            $updatedReport = $this->reportService->toggleClearStatus(
-                $report,
-                $request->action,
-                $request->user(),
-                $request->note
-            );
-
-            $this->clearReportCache($report->latitude, $report->longitude);
-
-            $message = $request->action === 'clear'
-                ? 'Report marked as cleared'
-                : 'Report marked as blocked';
-
-            return $this->success($updatedReport, $message,200);
-        } catch (\Exception $e) {
-            return $this->error([],$e->getMessage(), 500);
-        }
-    }
-
-    public function adminUpdate(AdminUpdateReportRequest $request, Report $report)
+    public function store(Request $request)
     {
         try {
-            $updatedReport = $this->reportService->adminUpdateReport(
-                $report,
-                $request->validated(),
-                $request->user()
-            );
+            $validator = Validator::make($request->all(), [
+                'text'              => ['nullable', 'string'],
+                'audio'             => ['nullable', 'file', 'mimes:mp3,wav,m4a', 'max:10240'],
+                'status'            => ['required', 'string', 'in:blocked,clear,accident,other'],
+                'lane'              => ['nullable', 'string', 'in:left,middle,right,none'],
+                'latitude'          => ['required', 'numeric', 'between:-90,90'],
+                'longitude'         => ['required', 'numeric', 'between:-180,180'],
+                'reported_at'       => ['nullable', 'date'],
+            ]);
 
-            $this->clearReportCache($report->latitude, $report->longitude);
-
-            return $this->success($updatedReport, 'Admin update successful');
-        } catch (\Exception $e) {
-            return $this->error('Failed to update', 500);
-        }
-    }
-
-    public function myReports(Request $request)
-    {
-        $reports = $request->user()
-            ->reports()
-            ->with('infos', 'statusChanges.user:id,name')
-            ->latest()
-            ->get();
-
-        return $this->success($reports, 'Your report list');
-    }
-
-    public function streamAudio(Report $report, $infoId)
-    {
-        $info = $report->infos()->findOrFail($infoId);
-        $path = storage_path('app/' . $info->path);
-
-        if (!file_exists($path)) {
-            abort(404, 'Audio file not found');
-        }
-
-        return response()->file($path, [
-            'Content-Type' => $info->mime ?? 'audio/mpeg',
-            'Content-Disposition' => 'inline',
-        ]);
-    }
-
-
-    protected function clearReportCache($lat, $lng)
-    {
-        $radii = [5, 10, 20, 50];
-        $includeOptions = [true, false];
-        $types = ['all', Report::TYPE_BLOCKED_LANE, Report::TYPE_EMERGENCY_CLEAR, Report::TYPE_TEMP_SHIFT];
-        $statuses = ['all', Report::STATUS_BLOCKED, Report::STATUS_CLEARED];
-
-        foreach ($radii as $radius) {
-            foreach ($includeOptions as $include) {
-                foreach ($types as $type) {
-                    foreach ($statuses as $status) {
-                        $cacheKey = "reports:{$lat}:{$lng}:{$radius}:{$include}:{$type}:{$status}";
-                        Cache::forget($cacheKey);
-                    }
-                }
+            if ($validator->fails()) {
+                return $this->error([], $validator->errors()->first(), 422);
             }
+
+            $data = $validator->validated();
+            $user = auth('api')->user();
+
+            if ($request->hasFile('audio')) {
+                $audioPath = Helper::uploadImage($request->file('audio'), 'reports/audio');
+                $data['audio'] = $audioPath;
+            }
+
+            $data['user_id'] = $user->id;
+            $report = Report::create($data);
+
+            $report['audio'] = url($report->audio);
+
+            return $this->success($report, 'Report created successfully.', 201);
+        } catch (Exception $e) {
+
+            Log::error('Report Creation Error: ' . $e->getMessage());
+            return $this->error([], $e->getMessage(), 500);
+        }
+    }
+
+    public function update(Request $request, $id)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'text' => ['nullable', 'string'],
+                'audio' => ['nullable', 'file', 'mimes:mp3,wav,m4a', 'max:10240'],
+                'status' => ['nullable', 'string', 'in:blocked,clear,accident,other'],
+                'lane' => ['nullable', 'string', 'in:left,middle,right,none'],
+                'latitude' => ['nullable', 'numeric', 'between:-90,90'],
+                'longitude' => ['nullable', 'numeric', 'between:-180,180'],
+                'reported_at' => ['nullable', 'date'],
+            ]);
+
+            if ($validator->fails()) {
+                return $this->error([], $validator->errors()->first(), 422);
+            }
+
+            $user = auth('api')->user();
+            $report = Report::where('id', $id)
+                ->where('user_id', $user->id)
+                ->first();
+
+            if (!$report) {
+                return $this->error([], 'Report not found.', 404);
+            }
+
+            $data = $validator->validated();
+
+            if ($request->hasFile('audio')) {
+                if ($report->audio) {
+                    Helper::deleteImage($report->audio);
+                }
+                $audioPath = Helper::uploadImage($request->file('audio'), 'reports/audio');
+                $data['audio'] = $audioPath;
+            }
+
+            $report['reported_at'] = now();
+
+            $report->update($data);
+
+            $report['audio'] = url($report->audio);
+
+            return $this->success($report, 'Report updated successfully.', 200);
+        } catch (Exception $e) {
+
+            Log::error('Report Update Error: ' . $e->getMessage());
+            return $this->error([], $e->getMessage(), 500);
+        }
+    }
+
+    public function destroy($id)
+    {
+        try {
+            $user = auth('api')->user();
+            $report = Report::where('id', $id)
+                ->where('user_id', $user->id)
+                ->first();
+
+            if (!$report) {
+                return $this->error([], 'Report not found.', 404);
+            }
+
+            if ($report->audio) {
+                Helper::deleteImage($report->audio);
+            }
+
+            $report->delete();
+
+            return $this->success([], 'Report deleted successfully.', 200);
+        } catch (Exception $e) {
+
+            Log::error('Report Delete Error: ' . $e->getMessage());
+            return $this->error([], $e->getMessage(), 500);
+        }
+    }
+
+    public function changeToggleReportStatus(Request $request, $id)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'status' => ['required', 'in:clear,blocked,accident,other'],
+            ]);
+
+            if ($validator->fails()) {
+                return $this->error([], $validator->errors()->first(), 422);
+            }
+
+            $report = Report::find($id);
+
+            if (!$report) {
+                return $this->error([], 'Report not found.', 404);
+            }
+
+            $report->status = $request->status;
+            $report->save();
+
+            return $this->success(['status' => $report->status], 'Report status updated successfully.', 200);
+        } catch (Exception $e) {
+
+            Log::error('Report Status Update Error: ' . $e->getMessage());
+            return $this->error([], $e->getMessage(), 500);
         }
     }
 }
