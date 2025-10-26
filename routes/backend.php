@@ -30,14 +30,6 @@ Route::prefix('setting/social-link')->middleware(['auth:web', 'admin'])->group(f
 });
 
 
-Route::controller(CategoryController::class)->prefix('category')->name('admin.category.')->group(function () {
-    Route::get('/', 'index')->name('index');
-    Route::post('/store', 'store')->name('store');
-    Route::put('/update/{id}', 'update')->name('update');
-    Route::delete('/destroy/{id}', 'destroy')->name('destroy');
-});
-
-
 //! Route for Profile Settings
 Route::controller(ProfileController::class)->group(function () {
     Route::get('setting/profile', 'index')->name('setting.profile.index');
