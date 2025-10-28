@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\Auth\UserProfileController;
 use App\Http\Controllers\Api\Backend\ApiReportController;
 use App\Http\Controllers\Api\Auth\ResetPasswordController;
 use App\Http\Controllers\Api\Auth\AuthenticationController;
+use App\Http\Controllers\Api\Backend\ApiUserSearchHistoryController;
 use App\Http\Controllers\Web\Backend\Settings\DynamicPageController;
 
 
@@ -49,5 +50,12 @@ Route::group(['middleware' => ['auth:api']], function () {
     Route::post('/report/store', [ApiReportController::class, 'store']);
     Route::post('/report/update/{id}', [ApiReportController::class, 'update']);
     Route::delete('/report/delete/{id}', [ApiReportController::class, 'destroy']);
+
+
+    Route::get('/search-history', [ApiUserSearchHistoryController::class, 'index']);
+    Route::post('/search-history/store', [ApiUserSearchHistoryController::class, 'store']);
+    Route::delete('/search-history/delete/{id}', [ApiUserSearchHistoryController::class, 'destroy']);
+    Route::delete('/search-history/delete-all', [ApiUserSearchHistoryController::class, 'clearAll']);
+
 
 });
