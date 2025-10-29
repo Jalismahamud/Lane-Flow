@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Web\Backend;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Report;
-use App\Models\User;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Support\Facades\Log;
@@ -14,6 +13,7 @@ class ReportStatisticsController extends Controller
 {
     public function index(Request $request)
     {
+
         try {
             // Get filter parameters
             $filterType = $request->query('filter_type', 'monthly');
@@ -83,7 +83,7 @@ class ReportStatisticsController extends Controller
                 } else {
                     $createdLabel = Carbon::parse($r->created_at)->format('Y-m-d');
                 }
-                
+
                 if (isset($createdData[$createdLabel])) {
                     $createdData[$createdLabel]++;
                 }
@@ -94,7 +94,7 @@ class ReportStatisticsController extends Controller
                     } else {
                         $updatedLabel = Carbon::parse($r->updated_at)->format('Y-m-d');
                     }
-                    
+
                     if (isset($updatedData[$updatedLabel])) {
                         $updatedData[$updatedLabel]++;
                     }
@@ -136,18 +136,11 @@ class ReportStatisticsController extends Controller
             // Calculate zone statistics based on geographical clustering
             $zoneData = $this->calculateZoneStatistics($mapReports);
 
+
             // Get unique statuses and lanes for filters (only from existing data)
             $statuses = Report::distinct()
                 ->whereNotNull('status')
                 ->pluck('status')
-                ->filter()
-                ->sort()
-                ->values();
-                
-            $lanes = Report::distinct()
-                ->whereNotNull('lane')
-                ->where('lane', '!=', '')
-                ->pluck('lane')
                 ->filter()
                 ->sort()
                 ->values();
@@ -156,6 +149,7 @@ class ReportStatisticsController extends Controller
             $totalThisMonth = Report::whereMonth('created_at', Carbon::now()->month)
                 ->whereYear('created_at', Carbon::now()->year)
                 ->count();
+
 
             $updatesThisMonth = Report::whereMonth('updated_at', Carbon::now()->month)
                 ->whereYear('updated_at', Carbon::now()->year)
@@ -168,6 +162,7 @@ class ReportStatisticsController extends Controller
                 ->get()
                 ->pluck('count', 'status')
                 ->toArray();
+
 
             return view('backend.layouts.report_statistics.index', [
                 'totalReports' => $totalReports,
@@ -189,7 +184,6 @@ class ReportStatisticsController extends Controller
                 'zoneData' => $zoneData,
                 'statusDistribution' => $statusDistribution,
                 'statuses' => $statuses,
-                'lanes' => $lanes,
             ]);
         } catch (\Exception $e) {
             Log::error($e->getMessage());
@@ -264,7 +258,7 @@ class ReportStatisticsController extends Controller
         $a = sin($dLat/2) * sin($dLat/2) +
              cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
              sin($dLon/2) * sin($dLon/2);
-        
+
         $c = 2 * atan2(sqrt($a), sqrt(1-$a));
 
         return $earthRadius * $c;
@@ -277,7 +271,7 @@ class ReportStatisticsController extends Controller
     {
         // Define major zones for Dhaka and surrounding areas
         // You can customize this based on your actual geographical areas
-        
+
         if ($lat >= 23.75 && $lat <= 23.82 && $lng >= 90.35 && $lng <= 90.42) {
             return 'Central Dhaka';
         } elseif ($lat >= 23.70 && $lat <= 23.75 && $lng >= 90.35 && $lng <= 90.42) {

@@ -20,7 +20,7 @@ Route::middleware(['auth:web', 'admin'])->group(function () {
 Route::get('/user-list', [UserListController::class, 'index'])->name('admin.user.index');
 Route::delete('/user-list/delete/{id}', [UserListController::class, 'destroy'])->name('admin.user.destroy');
 
-Route::get('/report-statistics', [ReportStatisticsController::class, 'index'])->name('admin.report.statistics.index');
+Route::get('/report-statistics', [ReportStatisticsController::class, 'index'])->name('admin.report_statistics.index');
 
 Route::prefix('setting/social-link')->middleware(['auth:web', 'admin'])->group(function () {
     Route::get('/', [SocialLinkController::class, 'index'])->name('social.link.index');

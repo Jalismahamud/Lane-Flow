@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Api\Auth;
 
+use App\Events\MessageSent;
 use Exception;
 use App\Helper\Helper;
 use App\Models\Report;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
+use App\Events\UserLocationUpdate;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
@@ -49,7 +51,7 @@ class UserProfileController extends Controller
         try {
             $validator = Validator::make($request->all(), [
                 'name' => ['nullable', 'string', 'max:255'],
-                'avatar' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,svg', 'max:5120'],
+                'avatar' => ['nullable', 'image', 'max:20480'],
                 'latitude' => ['nullable', 'string', 'max:255'],
                 'longitude' => ['nullable', 'string', 'max:255'],
             ]);
@@ -162,5 +164,51 @@ class UserProfileController extends Controller
         }
     }
 
-    
+    public function updateLocation(Request $request)
+    {
+        try {
+
+            $validator = Validator::make($request->all(), [
+                'latitude' => ['required', 'numeric', 'between:-90,90'],
+                'longitude' => ['required', 'numeric', 'between:-180,180'],
+            ]);
+
+            if ($validator->fails()) {
+                return $this->error([], $validator->errors()->first(), 422);
+            }
+
+
+            $user = auth('api')->user();
+
+            if (!$user) {
+               return $this->error([], 'User not found.', 404);
+            }
+
+            $validatedData = $validator->validated();
+
+
+            $user->update([
+                'latitude' => $validatedData['latitude'],
+                'longitude' => $validatedData['longitude'],
+            ]);
+
+
+            // broadcast(new MessageSent($user->id, $user->latitude, $user->longitude))->toOthers();
+
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Location updated and broadcasted successfully.',
+                'data' => [
+                    'id' => $user->id,
+                    'latitude' => (float)$user->latitude,
+                    'longitude' => (float)$user->longitude
+                ]
+            ], 200);
+        } catch (\Exception $e) {
+
+            Log::error('Location Update API Error: ' . $e->getMessage());
+            return $this->error([], $e->getMessage(), 500);
+        }
+    }
 }

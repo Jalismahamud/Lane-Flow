@@ -23,8 +23,8 @@ return new class extends Migration
             $table->boolean('is_otp_verified')->default(false);
 
             $table->text('avatar')->nullable();
-            $table->string('latitude')->nullable();
-            $table->string('longitude')->nullable();
+            $table->decimal('latitude', 10, 8)->nullable();
+            $table->decimal('longitude', 11, 8)->nullable();
 
             $table->longText('reset_password_token')->nullable();
             $table->timestamp('reset_password_token_expire_at')->nullable();

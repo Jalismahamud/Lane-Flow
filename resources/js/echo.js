@@ -1,6 +1,6 @@
 import Echo from 'laravel-echo';
-
 import Pusher from 'pusher-js';
+
 window.Pusher = Pusher;
 
 window.Echo = new Echo({
@@ -14,4 +14,10 @@ window.Echo = new Echo({
 });
 
 
+// সঠিক channel এবং event নাম ব্যবহার করো
+window.Echo.channel('chat-room')
+    .listen('.MessageSent', (e) => {
+        alert('sdf');
+        console.log('New message via WebSocket:', e);
 
+    });

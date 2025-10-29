@@ -42,6 +42,8 @@ Route::group(['middleware' => ['auth:api']], function () {
     Route::post('/update-avatar', [UserProfileController::class, 'updateAvatar']);
     Route::post('/update-password', [UserProfileController::class, 'updatePassword']);
 
+    Route::match(['put', 'post'], '/update-location', [UserProfileController::class, 'updateLocation']);
+
     Route::delete('/delete-profile', [UserProfileController::class, 'deleteProfile']);
     Route::post('/logout', [AuthenticationController::class, 'logout']);
 

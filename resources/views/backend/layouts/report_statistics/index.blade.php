@@ -1,3 +1,5 @@
+
+
 @extends('backend.app', ['title' => 'Report Statistics'])
 
 @section('content')
@@ -21,7 +23,7 @@
                 <!-- Statistics Cards -->
                 <div class="row">
                     @php use App\Helper\Helper; @endphp
-                    
+
                     <x-dashboard.card title="Total Reports" value="{{ Helper::formatNumberShort($totalReports) }}" icon="file-alt" color="primary" />
                     <x-dashboard.card title="Reports This Month" value="{{ $totalThisMonth }}" icon="file" color="success" />
                     <x-dashboard.card title="Updates This Month" value="{{ $updatesThisMonth }}" icon="edit" color="warning" />
@@ -108,7 +110,7 @@
                                     <button class="btn btn-sm btn-light shadow-sm" type="submit">
                                         <i class="fas fa-filter"></i> Apply Filter
                                     </button>
-                                    
+
                                     <button class="btn btn-sm btn-danger shadow-sm" type="button" onclick="resetFilters()">
                                         <i class="fas fa-redo"></i> Reset
                                     </button>
@@ -127,14 +129,14 @@
                         <div class="card shadow-lg border-0">
                             <div class="card-header bg-gradient-success text-white flex-column flex-md-row d-flex justify-content-between align-items-center">
                                 <h3 class="card-title">📋 Recent Reports</h3>
-                             
+
                                 <!-- Search & Filters Form -->
                                 <form method="GET" class="row g-3" id="searchForm">
                                     <input type="hidden" name="filter_type" value="{{ $filterType }}">
                                     <input type="hidden" name="month" value="{{ $selectedMonth }}">
                                     <input type="hidden" name="year" value="{{ $selectedYear }}">
                                     <input type="hidden" name="week" value="{{ $selectedWeek }}">
-                                    
+
                                     <div class="col-md-4">
                                         <div class="input-group">
                                             {{-- <span class="input-group-text bg-white">
@@ -151,19 +153,10 @@
                                             @endforeach
                                         </select>
                                     </div>
-                                    <div class="col-md-4">
-                                        <select name="lane" class="form-select" style="height: 35px" onchange="this.form.submit()">
-                                            <option value="">All Lanes</option>
-                                            @foreach($lanes as $l)
-                                                <option value="{{ $l }}" style="font-size: 14px" {{ $selectedLane == $l ? 'selected' : '' }}>{{ ucfirst($l) }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
 
-                                   
                                 </form>
 
-                                  
+
                             </div>
 
 
@@ -171,13 +164,12 @@
                             <div class="card-body">
                                 <div class="table-responsive">
                                     <table class="table table-hover table-striped">
-                                        <thead class="table-dark">
+                                        <thead class="table-secondary">
                                             <tr>
                                                 <th>#</th>
                                                 <th>User</th>
                                                 <th>Text</th>
                                                 <th>Status</th>
-                                                <th>Lane</th>
                                                 <th>Location</th>
                                                 <th>Created At</th>
                                                 <th>Updated At</th>
@@ -211,11 +203,10 @@
                                                             {{ ucfirst($r->status) }}
                                                         </span>
                                                     </td>
-                                                    <td><span class="badge bg-info">{{ ucfirst($r->lane) }}</span></td>
                                                     <td>
                                                         @if($r->latitude && $r->longitude)
                                                             <a href="javascript:void(0)" onclick="openMapModal({{ $r->latitude }}, {{ $r->longitude }}, '{{ addslashes($r->user ? ($r->user->name ?? $r->user->email) : 'Unknown') }}', '{{ addslashes($r->text ?? 'No description') }}', '{{ $r->status }}', '{{ $r->lane }}')" class="text-decoration-none">
-                                                                <i class="fas fa-map-marker-alt text-danger"></i> 
+                                                                <i class="fas fa-map-marker-alt text-danger"></i>
                                                                 {{ number_format($r->latitude, 4) }}, {{ number_format($r->longitude, 4) }}
                                                             </a>
                                                         @else
@@ -249,7 +240,7 @@
                                 <!-- Pagination -->
                                 <div class="d-flex justify-content-between align-items-center mt-3">
                                     <div>
-                                        Showing {{ $recentReports->firstItem() ?? 0 }} to {{ $recentReports->lastItem() ?? 0 }} 
+                                        Showing {{ $recentReports->firstItem() ?? 0 }} to {{ $recentReports->lastItem() ?? 0 }}
                                         of {{ $recentReports->total() }} reports
                                     </div>
                                     <div>
@@ -347,14 +338,14 @@
     <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.36.3/dist/apexcharts.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    
+
     <script>
         const createdData = {!! $createdDataJson !!};
         const updatedData = {!! $updatedDataJson !!};
         const mapReports = {!! json_encode($mapReports) !!};
         const zoneData = {!! json_encode($zoneData) !!};
         const statusDistribution = {!! json_encode($statusDistribution) !!};
-        
+
         let map;
         let is3DMode = false;
         let markers = [];
@@ -367,7 +358,7 @@
 
             const centerLat = lat || 23.8103;
             const centerLng = lng || 90.4125;
-            
+
             map = L.map('map').setView([centerLat, centerLng], lat ? 15 : 11);
 
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -388,7 +379,7 @@
                         'accident': 'orange',
                         'other': 'gray'
                     };
-                    
+
                     const icon = L.divIcon({
                         className: 'custom-marker',
                         html: `<div style="background-color: ${statusColors[report.status] || 'gray'}; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);"></div>`,
@@ -426,16 +417,16 @@
         function openMapModal(lat, lng, user, text, status, lane) {
             const modal = new bootstrap.Modal(document.getElementById('mapModal'));
             modal.show();
-            
+
             // Initialize map after modal is shown
             setTimeout(() => {
                 initMap(lat, lng);
-                
+
                 // Show info card
                 const infoCard = document.getElementById('map-info');
                 document.getElementById('info-user').textContent = user;
                 document.getElementById('info-text').textContent = text.substring(0, 100);
-                
+
                 const statusBadge = document.getElementById('info-status');
                 const statusColors = {
                     'blocked': 'danger',
@@ -445,7 +436,7 @@
                 };
                 statusBadge.className = 'badge bg-' + (statusColors[status] || 'secondary');
                 statusBadge.textContent = status.charAt(0).toUpperCase() + status.slice(1);
-                
+
                 document.getElementById('info-lane').textContent = lane.charAt(0).toUpperCase() + lane.slice(1);
                 infoCard.style.display = 'block';
             }, 300);
@@ -517,8 +508,8 @@
                         opacityTo: 0.3,
                     }
                 },
-                xaxis: { 
-                    categories: categories, 
+                xaxis: {
+                    categories: categories,
                     labels: { rotate: -45 }
                 },
                 yaxis: {
@@ -528,16 +519,16 @@
                         }
                     }
                 },
-                title: { 
-                    text: 'Reports Activity Over Time', 
+                title: {
+                    text: 'Reports Activity Over Time',
                     align: 'center',
                     style: {
                         fontSize: '18px',
                         fontWeight: 'bold'
                     }
                 },
-                tooltip: { 
-                    shared: true, 
+                tooltip: {
+                    shared: true,
                     intersect: false,
                     theme: 'dark'
                 },
@@ -699,7 +690,7 @@
         function toggleFilters(filterType) {
             const monthFilter = document.getElementById('month-filter');
             const weekFilter = document.getElementById('week-filter');
-            
+
             if (filterType === 'weekly') {
                 monthFilter.style.display = 'none';
                 weekFilter.style.display = 'flex';
@@ -713,14 +704,14 @@
             const now = new Date();
             const currentMonth = now.getMonth() + 1;
             const currentYear = now.getFullYear();
-            
+
             // Build URL with default values
             const url = new URL(window.location.href);
             url.search = ''; // Clear all params
             url.searchParams.set('filter_type', 'monthly');
             url.searchParams.set('month', currentMonth);
             url.searchParams.set('year', currentYear);
-            
+
             window.location.href = url.toString();
         }
 

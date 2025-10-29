@@ -48,8 +48,8 @@
                 </li>
 
                 <li class="slide">
-                    <a class="side-menu__item {{ request()->routeIs('user') ? 'has-link' : '' }}"
-                        href="{{ route('admin.report.statistics.index') }}">
+                    <a class="side-menu__item {{ request()->routeIs('report_statistics') ? 'has-link' : '' }}"
+                        href="{{ route('admin.report_statistics.index') }}">
                         <span><i class="side-menu__icon fa-solid fa-square-poll-vertical"></i></span>
                         <span class="side-menu__label">Report Statistics</span>
                     </a>
