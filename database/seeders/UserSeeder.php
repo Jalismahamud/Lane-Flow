@@ -2,44 +2,51 @@
 
 namespace Database\Seeders;
 
+use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
-use App\Models\User;
+use Faker\Factory as Faker;
 
 class UserSeeder extends Seeder
 {
-    public function run()
+    public function run(): void
     {
-        $users = [
+        $faker = Faker::create();
+
+        // Fixed admin + test user
+        $fixedUsers = [
             [
                 'name' => 'Admin',
                 'email' => 'admin@gmail.com',
                 'role' => 'admin',
                 'password' => Hash::make('12345678'),
-                'avatar' => null,
-                'is_otp_verified' => true,
             ],
             [
-                'name' => 'User',
+                'name' => 'Demo User',
                 'email' => 'user@gmail.com',
                 'role' => 'user',
                 'password' => Hash::make('12345678'),
-                'avatar' => null,
-                'is_otp_verified' => true,
             ],
         ];
 
-        foreach ($users as $userData) {
-            User::updateOrCreate(
-                ['email' => $userData['email']],
-                [
-                    'password' => $userData['password'],
-                    'name' => $userData['name'],
-                    'role' => $userData['role'],
-                    'avatar' => $userData['avatar'],
-                    'is_otp_verified' => $userData['is_otp_verified'],
-                ]
-            );
+        foreach ($fixedUsers as $user) {
+            User::updateOrCreate(['email' => $user['email']], $user);
+        }
+
+        for ($i = 0; $i < 200; $i++) {
+            $name = $faker->name;
+            $createdAt = $faker->dateTimeBetween('-3 months', 'now');
+
+            User::create([
+                'name' => $name,
+                'email' => $faker->unique()->safeEmail,
+                'role' => 'user',
+                'password' => Hash::make('12345678'),
+                'avatar' => 'default/default-avatar.png',
+                'is_otp_verified' => true,
+                'created_at' => $createdAt,
+                'updated_at' => now(),
+            ]);
         }
     }
 }

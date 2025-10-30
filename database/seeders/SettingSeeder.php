@@ -16,7 +16,7 @@ class SettingSeeder extends Seeder
             'title'         => 'LaneFlow',
             'phone'         => '123456789',
             'email'         => 'laneflow@gmail.com',
-            'name'          => 'Riya ky',
+            'name'          => 'ClaudeBorges',
             'copyright'     => 'Copyright © 2025 LaneFlow. All rights reserved.',
             'description' => "Our platform helps users make faster and more confident outfit decisions by understanding their personal style.
                                 Through an initial style quiz and smart AI assistance, users receive personalized outfit suggestions based on their preferences,
@@ -24,9 +24,9 @@ class SettingSeeder extends Seeder
                                 urated styling advice and access to online shopping platforms. Acting like a personal stylist, the platform evolves with user tastes
                                 and delivers a seamless fashion experience—all enhanced by a subscription model designed for flexibility and value.",
 
-            'address'       => 'Cairo, Australia',
+            'address'       => '123 Main St, Anytown, USA',
             'keywords'      => 'LaneFlow, Digital Agency, Startup, Small Business, Web Development, Design',
-            'author'        => 'Claudeborges',
+            'author'        => 'ClaudeBorges',
             'logo'          => 'uploads/settings/logo.png',
             'favicon'       => 'uploads/settings/favicon.png',
             'created_at'    => now(),
