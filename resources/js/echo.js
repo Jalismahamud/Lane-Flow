@@ -14,7 +14,7 @@ window.Echo = new Echo({
 });
 
 
-// সঠিক channel এবং event নাম ব্যবহার করো
+
 window.Echo.channel('chat-room')
     .listen('.MessageSent', (e) => {
         alert('sdf');

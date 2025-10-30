@@ -22,6 +22,13 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
+
+    'app' => [
+        'name' => env('APP_NAME'),
+        'url' => env('APP_URL'),
+        'version' => env('APP_VERSION'),
+        'icon' => env('APP_ICON'),
+    ],
     'google' => [
         'client_id' => env('GOOGLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),

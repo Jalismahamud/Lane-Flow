@@ -12,10 +12,19 @@ class SendForgotOtpMail extends Mailable
 {
     use Queueable, SerializesModels;
 
+    /**
+     * Public properties are available in the Blade view.
+     */
     public $otp;
-    public function __construct($otp)
+    public $user;
+
+    /**
+     * Create a new message instance.
+     */
+    public function __construct($otp, $user = null)
     {
         $this->otp = $otp;
+        $this->user = $user;
     }
 
     /**
@@ -24,7 +33,7 @@ class SendForgotOtpMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Forgot Otp Mail',
+            subject: 'Password Reset OTP',
         );
     }
 

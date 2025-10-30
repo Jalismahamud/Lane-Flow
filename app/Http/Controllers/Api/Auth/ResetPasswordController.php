@@ -40,7 +40,7 @@ class ResetPasswordController extends Controller
                 'otp_expires_at' => Carbon::now()->addMinutes(5),
             ]);
 
-            Mail::to($user->email)->send(new SendForgotOtpMail($otp));
+            Mail::to($user->email)->send(new SendForgotOtpMail($otp, $user));
 
             return $this->success(['otp' => $otp], 'Forgot password OTP sent successfully.', 200);
         } catch (Exception $e) {
@@ -84,7 +84,7 @@ class ResetPasswordController extends Controller
             ]);
 
 
-            Mail::to($user->email)->send(new ResendForgotOtpMail($otp));
+            Mail::to($user->email)->send(new ResendForgotOtpMail($otp, $user));
 
             return $this->success(['otp' => $otp], 'OTP resent successfully.', 200);
         } catch (Exception $e) {

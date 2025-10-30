@@ -2,13 +2,11 @@
 
 namespace App\Http\Controllers\Api\Auth;
 
-use App\Events\MessageSent;
+
 use Exception;
 use App\Helper\Helper;
-use App\Models\Report;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
-use App\Events\UserLocationUpdate;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
@@ -191,10 +189,6 @@ class UserProfileController extends Controller
                 'latitude' => $validatedData['latitude'],
                 'longitude' => $validatedData['longitude'],
             ]);
-
-
-            // broadcast(new MessageSent($user->id, $user->latitude, $user->longitude))->toOthers();
-
 
             return response()->json([
                 'success' => true,

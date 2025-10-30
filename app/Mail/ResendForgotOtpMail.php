@@ -17,9 +17,12 @@ class ResendForgotOtpMail extends Mailable
      * Create a new message instance.
      */
     public $otp;
-    public function __construct($otp)
+    public $user;
+
+    public function __construct($otp, $user = null)
     {
         $this->otp = $otp;
+        $this->user = $user;
     }
 
     /**
